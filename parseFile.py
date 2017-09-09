@@ -1,4 +1,9 @@
 import yaml
+import csv
+import os
+import sys
+import traceback
+import logging
 
 class iplMatch:
     # This is Match class.
@@ -6,7 +11,7 @@ class iplMatch:
     iMatchID = 0
     strSourceFileName = 0
     def __init__(self, strFileName):
-        print strFileName
+        #print strFileName
         self.strSourceFileName = strFileName
         stream =  file(strFileName, 'r')
         yamlMatchData = yaml.safe_load(stream)
@@ -15,6 +20,7 @@ class iplMatch:
         self.strMatchDate = str(yamlMatchData['info']['dates'][0])
         self.strHomeTeam = yamlMatchData['info']['teams'][0]
         self.strAwayTeam = yamlMatchData['info']['teams'][1]
+        #if (yamlMatchData['info']['outcome']['result']):   
         self.strWinner = yamlMatchData['info']['outcome']['winner']
         self.strTossWinner = yamlMatchData['info']['toss']['winner']
         self.strTossDecision = yamlMatchData['info']['toss']['decision']
@@ -23,7 +29,7 @@ class iplMatch:
 
 
     def displayMatchDetails(self):
-        # print "Match : ", self.strHomeTeam, " _vs_ ", self.strAwayTeam
+        print "Match : ", self.strHomeTeam, " _vs_ ", self.strAwayTeam
         print "" \
               "Venue : ", self.strMatchVenue, ",", self.strMatchCity
         print "" \
@@ -34,7 +40,7 @@ class iplMatch:
               "Won by ", self.strWinner, " by ", self.strWinType.keys()[0], " : ", self.strWinType.values()[0]
         print "" \
               "Man of the Match : ", self.strMoM
-        print self.strSourceFileName
+        #print self.strSourceFileName
 
     def reset(self):
         self.strMatchVenue = 0
@@ -48,12 +54,27 @@ class iplMatch:
         self.strWinType = 0
         self.strMoM = 0
 
-strAbsFilePath = "./data/ipl/1082591.yaml"
-iplMatchData = iplMatch(strAbsFilePath)
-# arrayIplMatches.append(copy.copy(iplMatchData))
-iplMatchData.displayMatchDetails()
-print "Done Display"
-print iplMatchData
-iplMatchData.reset()
-print "Done Reset"
-print iplMatchData
+    def toArray(self):
+        data = '|'.join([self.strHomeTeam, self.strAwayTeam, self.strMatchVenue, self.strMatchCity, self.strMatchDate, self.strTossWinner, self.strTossDecision, self.strWinner,self.strWinType.keys()[0], str(self.strWinType.values()[0]) ,"\n"])
+        return data
+
+if(sys.argv[1] == 'DIR'):
+    path = sys.argv[2]
+    fd = open('document.csv','wb')
+    for files in os.listdir(path):
+        current_file = os.path.join(path, files)
+        try:
+            iplMatchData = iplMatch(current_file)
+            data = iplMatchData.toArray()
+            fd.write(data)
+        except KeyError:
+            print ("Failed" + current_file)
+            pass
+        iplMatchData.reset()
+else:
+    strAbsFilePath = sys.argv[2]
+    iplMatchData = iplMatch(strAbsFilePath)
+    data = iplMatchData.toArray()
+    print data
+
+fd.close()
